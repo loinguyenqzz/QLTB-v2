@@ -1,13 +1,35 @@
 :root {
   --green : #03AE66;
-  --greenHover: #02BF70;
+  --green-hover: #02BF70;
+  --red: #fa3939;
   --white: #ffffff;
-  --whiteHover: #EAECEF;
-  --boderColor: #CECECE;
+  --white-hover: #EAECEF;
+  --border-color: #CECECE;
+  --shadow-color: #d5d5d5;
+  --background-sidebar: #24344B;
+  --background-color : #EAECEF;
+  --focus-grid: #CCEBFF;
+  --hover-grid : #E5F3FF;
+  --link-color: #0097EB;
+  --header-grid-panel: #f5f6fa;
+  --line-grid-panel: #d5d8e6;
 }
 
 .shadow {
-  box-shadow: 0px 0px 10px #D5D5D5;
+  box-shadow: 10px 0px 10px #D5D5D5;
+}
+
+.flex {
+  display: flex;
+}
+
+.title {
+  font-size: 14px;
+  font-style: OpenSans-Semibold;
+}
+
+.sub-title {
+  font-size: 14px;
 }
 
 @font-face {
