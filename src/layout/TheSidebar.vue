@@ -66,6 +66,7 @@ const sidebarItems = [
   width: 220px;
   background-color: var(--background-sidebar);
   transition: width 0.3s ease;
+  flex-shrink: 0;
 }
 
 .sidebar-mini {

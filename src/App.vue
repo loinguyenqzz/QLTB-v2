@@ -16,7 +16,8 @@ import TheContent from "./layout/TheContent.vue";
 
 <style scoped>
 .container {
-  flex-grow: 1;
+  flex: 1;
+  width: calc(100vw - 220px);
   height: 100vh;
 }
 </style>

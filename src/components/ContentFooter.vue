@@ -1,7 +1,7 @@
 <template>
   <div class="content-footer">
-    <img src="../assets/Icons/ic_MoveToFirst.png" alt="" />
-    <img src="../assets/Icons/ic_Back.png" alt="" />
+    <img style="opacity: 0.6" src="../assets/Icons/ic_MoveToFirst.png" alt="" />
+    <img style="opacity: 0.6" src="../assets/Icons/ic_Back.png" alt="" />
     <BaseInput class="current-page"/>
     <img src="../assets/Icons/ic_Next.png" alt="" />
     <img src="../assets/Icons/ic_MoveToLast.png" alt="" />
@@ -10,6 +10,7 @@
 </template>
 <script setup>
 import BaseInput from "./common/BaseInput.vue";
+
 </script>
 <style>
 .content-footer {
