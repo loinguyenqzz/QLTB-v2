@@ -7,7 +7,11 @@
             <th class="column-checkbox">
               <BaseCheckbox id="select-all" @onChange="handleSelectAll" />
             </th>
-            <th v-for="(item, index) in props.headers" :key="index" :style="{width: item.width + 'px'}">
+            <th
+              v-for="(item, index) in props.headers"
+              :key="index"
+              :style="{ width: item.width + 'px' }"
+            >
               {{ item.text }}
             </th>
             <th style="width: 80px"></th>
@@ -51,18 +55,30 @@
                 class="record__btn--delete"
                 src="../assets/Icons/ic_Remove.png"
                 alt=""
-                @click="handleDelete(item.id)"
+                @click="handleClickBtnDelete(item.id)"
               />
             </td>
           </tr>
         </tbody>
       </table>
     </div>
+    <ModalReAuth
+      v-show="isModalActive"
+      title-modal="Thông báo"
+      message="Bạn có chắc chắn muốn xóa cán bộ giáo viên đang chọn không ?"
+      width="350"
+      :re-auth-id="reAuthId"
+      @close="closeModal"
+      @submit="handleDelete"
+    />
+    <Toastify :isOpen="isOpenToastify" message="Đã xóa thành công 1 bản ghi" />
   </div>
 </template>
 <script setup>
-import { reactive, ref, toRef, watch } from "vue";
+import { onMounted, reactive, ref, toRef, watch } from "vue";
 import BaseCheckbox from "./common/BaseCheckbox.vue";
+import ModalReAuth from "./ModalReAuth.vue";
+import Toastify from "./Toastify.vue";
 
 const props = defineProps({
   headers: {
@@ -74,10 +90,25 @@ const props = defineProps({
     default: [],
   },
 });
+
 const emits = defineEmits(["changeData"]);
 
 const checkList = [];
 const data = ref([]);
+const isModalActive = ref(false);
+const reAuthId = ref("");
+const isOpenToastify = ref(false);
+
+onMounted(async () => {
+  data.value = props.items.map((item) => ({
+    ...item,
+    isCheck: false,
+    subjectList: item.subjectApply.map((element) => element.name).toString(),
+    equipmentRoomList: item.equipmentRoomAplly
+      .map((element) => element.name)
+      .toString(),
+  }));
+})
 
 watch(toRef(props, "items"), () => {
   data.value = props.items.map((item) => ({
@@ -90,11 +121,16 @@ watch(toRef(props, "items"), () => {
   }));
 });
 
+const closeModal = () => {
+  isModalActive.value = !isModalActive.value;
+};
+
 const handleSelectAll = (state) => {
   data.value.forEach((element) => (element.isCheck = state.isCheck));
 };
 
 const handleDelete = async (id) => {
+  isModalActive.value = false;
   try {
     await fetch(`http://localhost:3000/employee/${id}`, {
       method: "DELETE",
@@ -102,10 +138,19 @@ const handleDelete = async (id) => {
         "Content-Type": "application/json",
       },
     });
+    isOpenToastify.value = true;
+    setTimeout(() => {
+      isOpenToastify.value = false;
+    }, 3000);
     emits("changeData");
   } catch (error) {
     console.error("Error:", error);
   }
+};
+
+const handleClickBtnDelete = (id) => {
+  isModalActive.value = true;
+  reAuthId.value = id;
 };
 </script>
 <style scope>

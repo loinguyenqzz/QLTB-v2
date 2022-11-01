@@ -2,7 +2,7 @@
   <div class="toolbar">
     <BaseInputSearch />
     <div class="toolbar__right">
-      <BaseButton style-button="style1" @click="handleClick">Thêm</BaseButton>
+      <BaseButton style-button="style1" @click="isModalActive = true">Thêm</BaseButton>
       <BaseButton style-button="style2">Xuất khẩu</BaseButton>
       <BaseButton style-button="style4">
         <img src="../assets/Icons/ic_More.png" alt="" />
@@ -26,10 +26,6 @@ import ModalForm from "./ModalForm.vue";
 const emits = defineEmits(["changeData"]);
 
 const isModalActive = ref(false);
-
-const handleClick = () => {
-  isModalActive.value = !isModalActive.value;
-};
 
 const closeModal = () => {
   isModalActive.value = !isModalActive.value;

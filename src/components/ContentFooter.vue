@@ -2,7 +2,7 @@
   <div class="content-footer">
     <img style="opacity: 0.6" src="../assets/Icons/ic_MoveToFirst.png" alt="" />
     <img style="opacity: 0.6" src="../assets/Icons/ic_Back.png" alt="" />
-    <BaseInput class="current-page"/>
+    <BaseInput class="current-page" value="1" />
     <img src="../assets/Icons/ic_Next.png" alt="" />
     <img src="../assets/Icons/ic_MoveToLast.png" alt="" />
     <span>1/n trang x kết quả</span>
@@ -27,5 +27,6 @@ import BaseInput from "./common/BaseInput.vue";
 }
 .current-page {
     width: 64px;
+    padding-left: 27px;
 }
 </style>

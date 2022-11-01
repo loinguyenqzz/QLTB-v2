@@ -7,13 +7,14 @@
     <input
       type="text"
       class="base-input"
+      :class="[props.errorMessage ? 'base-input-error' : '']"
       ref="inputRef"
       @input="handleInput"
       :value="props.modelValue"
     />
-    <div v-if="errorMessage" class="error-message">
+    <div v-if="props.errorMessage" class="error-message">
       <div class="triangle"></div>
-      <span>Looi</span>
+      <span>{{ props.errorMessage }}</span>
     </div>
   </div>
 </template>
@@ -32,22 +33,22 @@ const props = defineProps({
   },
   modelValue: {
     type: String,
-    default: ""
+    default: "",
   },
   focus: {
     type: Boolean,
-    default: false
-  }
+    default: false,
+  },
 });
 
 const emits = defineEmits(["update:modelValue"]);
-const inputRef = ref(null)
+const inputRef = ref(null);
 
 onMounted(() => {
   if (props.focus) {
-    inputRef.value.focus()
+    inputRef.value.focus();
   }
-})
+});
 
 const handleInput = (e) => {
   emits("update:modelValue", e.target.value);
@@ -60,6 +61,10 @@ const handleInput = (e) => {
   border-radius: 4px;
   border: 1px solid var(--border-color);
   outline: none;
+}
+
+.base-input-error {
+  border: 1px solid var(--red) !important;
 }
 
 .base-input:focus {
@@ -86,18 +91,22 @@ const handleInput = (e) => {
 }
 
 .error-message {
-  width: 150px;
+  display: none;
+  min-width: max-content;
   height: 28px;
   background-color: #ff8484;
   color: white;
-  display: flex;
   align-items: center;
-  padding-left: 5px;
+  padding: 0 5px;
   position: absolute;
   border-radius: 4px;
   top: 0;
-  right: -160px;
+  left: calc(100% + 5px);
   z-index: 2;
+}
+
+.input-group:hover .error-message {
+  display: flex !important;
 }
 
 .input-label {

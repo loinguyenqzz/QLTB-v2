@@ -20,12 +20,14 @@
           <FormGroupInput
             label="Số hiệu cán bộ"
             v-model="employee.employeeCode"
+            :error-message="errorMessageEmployeeCode"
             :focus="true"
             :is-require="true"
           />
           <FormGroupInput
             label="Họ và tên"
             v-model="employee.employeeName"
+            :error-message="errorMessageEmployeeName"
             :is-require="true"
           />
           <FormGroupInput
@@ -79,11 +81,11 @@ import ContextMenu from "./ContextMenu.vue";
 import BaseCheckbox from "./common/BaseCheckbox.vue";
 import BaseInputDate from "./common/BaseInputDate.vue";
 import BaseButton from "./common/BaseButton.vue";
-import { computed, onMounted, reactive, ref, watch } from "vue";
-import useData from '../hooks/useData'
+import { computed, onMounted, reactive, ref, toRef, watch } from "vue";
+import useData from "../hooks/useData";
 
-const {data, getAll, getMaxEmployeeCode} = useData()
-getAll()
+const { data, getAll, getMaxEmployeeCode, checkDuplicate } = useData();
+getAll();
 
 const props = defineProps({
   titleModal: {
@@ -107,7 +109,9 @@ const props = defineProps({
 
 const emits = defineEmits(["submit"]);
 
-const inputEmployeeCode = ref(null)
+const inputEmployeeCode = ref(null);
+const errorMessageEmployeeCode = ref("");
+const errorMessageEmployeeName = ref("");
 
 const department = [
   {
@@ -190,11 +194,37 @@ const employee = reactive({
 });
 
 watch(data, () => {
-  employee.employeeCode = `SHCB${getMaxEmployeeCode() + 1}`
-})
+  employee.employeeCode = `SHCB${getMaxEmployeeCode() + 1}`;
+});
+
+watch(toRef(employee, "employeeCode"), () => {
+  if (!employee.employeeCode) {
+    errorMessageEmployeeCode.value = "Trường này không được để trống";
+  } else {
+    if (checkDuplicate(employee.employeeCode)) {
+      errorMessageEmployeeCode.value = "Số hiệu cán bộ đã tồn tại";
+    } else {
+      errorMessageEmployeeCode.value = "";
+    }
+  }
+});
+
+watch(toRef(employee, "employeeName"), () => {
+  errorMessageEmployeeName.value = !employee.employeeName
+    ? "Trường này không được để trống"
+    : "";
+});
 
 const handleSubmit = () => {
-  emits("submit", employee);
+  if (!employee.employeeName) {
+    errorMessageEmployeeName.value = "Trường này không được để trống";
+  } else if (
+    !errorMessageEmployeeCode.value &&
+    !errorMessageEmployeeName.value
+  ) {
+    emits("submit", employee);
+  } else {
+  }
 };
 </script>
 

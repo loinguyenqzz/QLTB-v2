@@ -15,8 +15,13 @@ export default function () {
     const getMaxEmployeeCode = () => {
         const employeeCode = data.value.map((item) => item.employeeCode)
         const codeNumber = employeeCode.map((item) => parseInt(item.slice(4)))
-        return Math.max(...codeNumber) > 0 || 0
+        return Math.max(...codeNumber) > 0 ? Math.max(...codeNumber) : 0
     }
 
-    return { data, getAll, getMaxEmployeeCode }
+    const checkDuplicate = (employeeCode) => {
+        const employeeCodeArr = data.value.map((item) => item.employeeCode)
+        return employeeCodeArr.includes(employeeCode)
+    }
+
+    return { data, getAll, getMaxEmployeeCode, checkDuplicate }
 };
