@@ -3,8 +3,8 @@
     <label for="" style="min-width: 110px">{{ props.label }}</label>
     <div
       class="selected"
-      @click.self="isOpen = !isOpen"
       :tabindex="props.tabindex"
+      @click.self="isOpen = !isOpen"
       @blur="isOpen = false"
     >
       {{ selected }}
@@ -41,7 +41,7 @@ const props = defineProps({
   tabindex: {
     type: Number,
     default: 0,
-  },
+  }
 });
 
 const emit = defineEmits(["input"]);
@@ -54,9 +54,6 @@ const handleClick = (option) => {
   isOpen.value = false;
 };
 
-// onMounted(() => {
-//   emit("input", selected.value);
-// });
 </script>
 <style scoped>
 .base-select {

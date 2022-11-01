@@ -3,8 +3,8 @@
     <label for="" style="min-width: 110px">{{ props.label }}</label>
     <div
       class="tag-wrapper"
-      @click.self="isOpen = !isOpen"
       :tabindex="props.tabindex"
+      @click.self="isOpen = !isOpen"
       @blur="isOpen = false"
     >
       <div class="tag-picked" v-for="(tag, i) in tagPicked" :key="i">
@@ -43,7 +43,7 @@
   </div>
 </template>
 <script setup>
-import { reactive, ref } from "vue";
+import { onUpdated, reactive, ref } from "vue";
 import BaseCheckbox from "./common/BaseCheckbox.vue";
 
 const props = defineProps({
@@ -69,6 +69,8 @@ const props = defineProps({
   },
 });
 
+const emits = defineEmits(['change'])
+
 const tagPicked = ref([]);
 const isOpen = ref(false);
 const options = reactive(
@@ -77,6 +79,10 @@ const options = reactive(
     isCheck: false,
   }))
 );
+
+onUpdated(() => {
+   emits('change', tagPicked.value)
+})
 
 const handleSelectAll = (checkbox) => {
   options.forEach((option) => (option.isCheck = checkbox.isCheck));
@@ -90,7 +96,8 @@ const handleRemoveTag = (tag) => {
 
 const handleChangeCheckbox = (checkbox) => {
   if (checkbox.isCheck) {
-    const option = props.options.find((option) => option.id === checkbox.id);
+    const option = options.find((option) => option.id === checkbox.id);
+    option.isCheck = true
     tagPicked.value.push(option);
   } else {
     tagPicked.value = tagPicked.value.filter(

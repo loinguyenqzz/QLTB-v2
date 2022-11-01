@@ -12,6 +12,7 @@
         width="850"
         title-modal="Thêm hồ sơ Cán bộ, giáo viên"
         @close="closeModal"
+        @submit="handleSubmit"
       />
     </div>
   </div>
@@ -22,6 +23,8 @@ import BaseInputSearch from "../components/common/BaseInputSearch.vue";
 import BaseButton from "./common/BaseButton.vue";
 import ModalForm from "./ModalForm.vue";
 
+const emits = defineEmits(["changeData"]);
+
 const isModalActive = ref(false);
 
 const handleClick = () => {
@@ -30,6 +33,22 @@ const handleClick = () => {
 
 const closeModal = () => {
   isModalActive.value = !isModalActive.value;
+};
+
+const handleSubmit = async (employee) => {
+  isModalActive.value = false;
+  try {
+    await fetch("http://localhost:3000/employee", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(employee),
+    });
+    emits('changeData')
+  } catch (error) {
+    console.error("Error:", error);
+  }
 };
 </script>
 <style scope>

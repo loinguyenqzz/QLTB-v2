@@ -20,6 +20,7 @@
           <FormGroupInput
             label="Số hiệu cán bộ"
             v-model="employee.employeeCode"
+            :focus="true"
             :is-require="true"
           />
           <FormGroupInput
@@ -35,27 +36,38 @@
           <BaseSelect
             label="Tổ bộ môn"
             :options="department"
-            @input="handleChangeSelect"
+            @input="(option) => (employee.department = option.name)"
           />
-          <ContextMenu label="QL theo môn" :options="subject" />
+          <ContextMenu
+            label="QL theo môn"
+            :options="subject"
+            @change="(selected) => (employee.subjectApply = selected)"
+          />
           <ContextMenu
             label="QL kho, phòng"
             width="100%"
             :options="equipmentRoom"
+            @change="(selected) => (employee.equipmentRoomAplly = selected)"
           />
           <div class="work-infor">
-            <BaseCheckbox label="Trình độ nghiệp vụ QLTB" />
+            <BaseCheckbox
+              label="Trình độ nghiệp vụ QLTB"
+              @onChange="(state) => (employee.isTraned = state.isCheck)"
+            />
             <BaseCheckbox
               label="Đang làm việc"
-              @onChange="handleCheckWorking"
+              @onChange="(state) => (employee.isWorking = state.isCheck)"
             />
             <BaseInputDate
-              :style="{ visibility: isWorking ? 'hidden' : 'visible' }"
+              :style="{ visibility: employee.isWorking ? 'hidden' : 'visible' }"
               label="Ngày nghỉ việc"
             />
           </div>
         </form>
       </div>
+    </template>
+    <template #submit>
+      <BaseButton @click="handleSubmit">Lưu</BaseButton>
     </template>
   </Modal>
 </template>
@@ -66,101 +78,123 @@ import BaseSelect from "./common/BaseSelect.vue";
 import ContextMenu from "./ContextMenu.vue";
 import BaseCheckbox from "./common/BaseCheckbox.vue";
 import BaseInputDate from "./common/BaseInputDate.vue";
-import { onUpdated, reactive, ref } from "vue";
+import BaseButton from "./common/BaseButton.vue";
+import { computed, onMounted, reactive, ref, watch } from "vue";
+import useData from '../hooks/useData'
+
+const {data, getAll, getMaxEmployeeCode} = useData()
+getAll()
 
 const props = defineProps({
   titleModal: {
     type: String,
     default: "",
   },
+  data: {
+    type: Object,
+    default: {
+      employeeCode: "",
+      employeeName: "",
+      phoneNumber: "",
+      department: "",
+      subjectApply: [],
+      equipmentRoomAplly: [],
+      isTraned: false,
+      isWorking: false,
+    },
+  },
 });
+
+const emits = defineEmits(["submit"]);
+
+const inputEmployeeCode = ref(null)
 
 const department = [
   {
-    id: "department-1",
+    id: "d-1",
     name: "Tổ Toán - Tin",
   },
   {
-    id: "department-2",
+    id: "d-2",
     name: "Tổ Hóa - Sinh",
   },
   {
-    id: "department-3",
+    id: "d-3",
     name: "Tổ Lý",
   },
   {
-    id: "department-4",
+    id: "d-4",
     name: "Tổ Anh - Văn",
   },
   {
-    id: "department-5",
+    id: "d-5",
     name: "Tổ Lý",
   },
 ];
 
 const subject = [
   {
-    id: "subject-1",
+    id: "s-1",
     name: "Toán",
   },
   {
-    id: "subject-2",
+    id: "s-2",
     name: "Hóa",
   },
   {
-    id: "subject-3",
+    id: "s-3",
     name: "Lý",
   },
   {
-    id: "subject-4",
+    id: "s-4",
     name: "Anh",
   },
   {
-    id: "subject-5",
+    id: "s-5",
     name: "Văn",
   },
   {
-    id: "subject-6",
+    id: "s-6",
     name: "Sinh",
   },
 ];
 
 const equipmentRoom = [
   {
-    id: "equipmentRoom-1",
+    id: "e-1",
     name: "Kho thiết bị chung",
   },
   {
-    id: "equipmentRoom-2",
+    id: "e-2",
     name: "Phòng hóa - sinh",
   },
   {
-    id: "equipmentRoom-3",
+    id: "e-3",
     name: "Phòng tin học",
   },
   {
-    id: "equipmentRoom-3",
+    id: "e-3",
     name: "Phòng tin học",
   },
 ];
 
-const isWorking = ref(false);
 const employee = reactive({
   employeeCode: "",
   employeeName: "",
   phoneNumber: "",
   department: "",
-  subjectApply: "",
-  equipmentRoomAplly: "",
+  subjectApply: [],
+  equipmentRoomAplly: [],
   isTraned: false,
   isWorking: false,
 });
 
-const handleChangeSelect = (option) => {
-  console.log(option);
-};
-const handleCheckWorking = (checkbox) => {
-  isWorking.value = checkbox.isCheck;
+watch(data, () => {
+  employee.employeeCode = `SHCB${getMaxEmployeeCode() + 1}`
+})
+
+const handleSubmit = () => {
+  emits("submit", employee);
 };
 </script>
 

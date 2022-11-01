@@ -13,7 +13,7 @@
         <div class="modal-footer">
           <BaseButton styleButton="style2" @click="handleCloseModal"
             >Đóng</BaseButton>
-          <slot name="footer-submit"></slot>
+          <slot name="submit"></slot>
         </div>
       </div>
     </div>
@@ -72,6 +72,7 @@ const handleCloseModal = () => {
 
 .modal-footer {
   position: absolute;
+  display: flex;
   right: 16px;
   bottom: 24px;
 }

@@ -7,30 +7,26 @@
             <th class="column-checkbox">
               <BaseCheckbox id="select-all" @onChange="handleSelectAll" />
             </th>
-            <th
-              v-for="(item, index) in props.headers"
-              :key="index"
-
-            >
+            <th v-for="(item, index) in props.headers" :key="index" :style="{width: item.width + 'px'}">
               {{ item.text }}
             </th>
             <th style="width: 80px"></th>
           </tr>
         </thead>
         <tbody>
-          <tr v-for="(item, index) in data" :key="index">
+          <tr v-for="(item, index) in data" :key="item.id">
             <td class="column-checkbox">
               <BaseCheckbox
                 :id="`record-checkbox-${index}`"
-                :isCheck="data.isCheck"
+                :isCheck="item.isCheck"
               />
             </td>
             <td>{{ item.employeeCode }}</td>
             <td>{{ item.employeeName }}</td>
             <td>{{ item.phoneNumber }}</td>
             <td>{{ item.department }}</td>
-            <td>{{ item.subjectApply }}</td>
-            <td>{{ item.ManagementByDepartment }}</td>
+            <td class="ellipsis">{{ item.subjectList }}</td>
+            <td class="ellipsis">{{ item.equipmentRoomList }}</td>
             <td>
               <img
                 v-if="item.isTraned"
@@ -55,7 +51,7 @@
                 class="record__btn--delete"
                 src="../assets/Icons/ic_Remove.png"
                 alt=""
-                @click="handleDelete(index)"
+                @click="handleDelete(item.id)"
               />
             </td>
           </tr>
@@ -65,7 +61,7 @@
   </div>
 </template>
 <script setup>
-import { reactive, ref } from "vue";
+import { reactive, ref, toRef, watch } from "vue";
 import BaseCheckbox from "./common/BaseCheckbox.vue";
 
 const props = defineProps({
@@ -78,21 +74,38 @@ const props = defineProps({
     default: [],
   },
 });
+const emits = defineEmits(["changeData"]);
 
 const checkList = [];
-const data = reactive(
-  props.items.map((item) => ({
+const data = ref([]);
+
+watch(toRef(props, "items"), () => {
+  data.value = props.items.map((item) => ({
     ...item,
     isCheck: false,
-  }))
-);
+    subjectList: item.subjectApply.map((element) => element.name).toString(),
+    equipmentRoomList: item.equipmentRoomAplly
+      .map((element) => element.name)
+      .toString(),
+  }));
+});
 
 const handleSelectAll = (state) => {
-  data.forEach((element) => (data.isCheck = state.isCheck));
+  data.value.forEach((element) => (element.isCheck = state.isCheck));
 };
 
-const handleDelete = (index) => {
-  data.splice(index, 1);
+const handleDelete = async (id) => {
+  try {
+    await fetch(`http://localhost:3000/employee/${id}`, {
+      method: "DELETE",
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
+    emits("changeData");
+  } catch (error) {
+    console.error("Error:", error);
+  }
 };
 </script>
 <style scope>
@@ -105,7 +118,6 @@ const handleDelete = (index) => {
   height: 100%;
   width: 100%;
   min-width: max-content;
-
   overflow-y: auto;
   border: 1px solid white;
   position: relative;
@@ -171,5 +183,11 @@ const handleDelete = (index) => {
 .record__btn--delete:hover {
   background-color: #e0e0e0;
   content: url("../assets/Icons/ic_Remove_Hover.png");
+}
+
+.ellipsis {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 </style>

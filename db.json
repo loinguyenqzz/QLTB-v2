@@ -1,0 +1,27 @@
+{
+  "employee": [
+    {
+      "employeeCode": "SHCB1",
+      "employeeName": "Lợi",
+      "phoneNumber": "â",
+      "department": "Tổ Toán - Tin",
+      "subjectApply": [
+        {
+          "id": "s-1",
+          "name": "Toán",
+          "isCheck": true
+        },
+        {
+          "id": "s-2",
+          "name": "Hóa",
+          "isCheck": true
+        }
+      ],
+      "equipmentRoomAplly": [],
+      "isTraned": false,
+      "isWorking": true,
+      "email": "â",
+      "id": 1
+    }
+  ]
+}

@@ -7,6 +7,7 @@
     <input
       type="text"
       class="base-input"
+      ref="inputRef"
       @input="handleInput"
       :value="props.modelValue"
     />
@@ -17,6 +18,8 @@
   </div>
 </template>
 <script setup>
+import { onMounted, ref } from "vue";
+
 const props = defineProps({
   isRequire: {
     type: Boolean,
@@ -31,9 +34,20 @@ const props = defineProps({
     type: String,
     default: ""
   },
+  focus: {
+    type: Boolean,
+    default: false
+  }
 });
 
 const emits = defineEmits(["update:modelValue"]);
+const inputRef = ref(null)
+
+onMounted(() => {
+  if (props.focus) {
+    inputRef.value.focus()
+  }
+})
 
 const handleInput = (e) => {
   emits("update:modelValue", e.target.value);
