@@ -175,9 +175,12 @@ const handleDeleteMutiple = async () => {
   if (checkedList.value.length == 0) {
     toastifyRef.value.warning(`Bạn chưa chọn bản ghi nào`);
   } else {
-    for (let item of checkedList.value) {
-      await employeeServices.delele(item);
-    }
+    // for (let item of checkedList.value) {
+    //   await employeeServices.delele(item);
+    // }
+    await employeeServices.multipleDelete({
+      employeeIds: checkedList.value.toString(),
+    });
     getEmployeeByFilter();
     toastifyRef.value.success(
       `Đã xóa thành công ${checkedList.value.length} bản ghi`

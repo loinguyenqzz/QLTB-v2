@@ -6,7 +6,7 @@
         >Thêm</BaseButton
       >
       <a href="http://localhost:5038/api/Employees/export">
-        <BaseButton style-button="style2" @click="handleExport">Xuất khẩu</BaseButton>
+        <BaseButton style-button="style2">Xuất khẩu</BaseButton>
       </a>
       <BaseButton
         style-button="style4 relative"
@@ -27,7 +27,7 @@
       <ModalForm
         v-if="isShowModalForm"
         width="850"
-        :title-modal="resource.MODAL_TITLE_INSERT"
+        :title-modal="resources.MODAL_TITLE_INSERT"
         :data="employee"
         @close="closeModal"
         @submit="handleSubmit"
@@ -35,7 +35,7 @@
       <ModalReAuth
         v-show="isShowModalConfirm"
         title-modal="Thông báo"
-        message="Bạn có chắc chắn muốn xóa những Cán bộ giáo viên đang chọn không?"
+        :message="resources.MESSAGE_CONFIRM_MUTIPLE_DELETE"
         width="350"
         @close="isShowModalConfirm = false"
         @submit="handleConfirm"
@@ -54,7 +54,7 @@ import ModalForm from "./ModalForm.vue";
 import ModalReAuth from "./ModalReAuth.vue";
 import Toastify from "./Toastify.vue";
 import useDebounce from "../hooks/useDebounce.js";
-import resource from '../utils/resource.js'
+import resources from '../utils/resources.js'
 
 const emits = defineEmits(["changeData", "DeleteGridItem", "search"]);
 
@@ -113,16 +113,13 @@ watch(isShowModalForm, () => {
 const handleSubmit = async (employee) => {
   delete employee.employeeId;
   try {
-    const result = await axios.post(
-      "http://localhost:5038/api/employees",
-      employee
-    );
-    toastifyRef.value.success(`Đã thêm thành công 1 bản ghi`);
+    const result = await employeeServices.insert(employee)
+    toastifyRef.value.success(resources.MESSAGE_SUCCESS_INSERT);
     emits("changeData");
     isShowModalForm.value = false;
   } catch (error) {
     const { errorCode } = error.response.data;
-    toastifyRef.value.error(`Mã số cán bộ đã tồn tại`);
+    toastifyRef.value.error(resources.MESSAGE_DUPLICATE_EMPLOYEE_CODE);
   }
 };
 /**

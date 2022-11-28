@@ -190,10 +190,7 @@ const handleDelete = async (id) => {
  */
 const handleEditEmployee = async (employee) => {
   try {
-    const result = await axios.put(
-      `http://localhost:5038/api/Employees/${employee.employeeId}`,
-      employee
-    );
+    const result = await employeeServices.update(employee)
     emits("changeData");
     toastifyRef.value.success("Đã cập nhật 1 bản ghi")
     isModalFormActive.value = false;

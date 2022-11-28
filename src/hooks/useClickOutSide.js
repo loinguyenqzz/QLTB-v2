@@ -1,7 +1,7 @@
 import { onBeforeUnmount, onMounted } from "vue";
 
 /**
- * 
+ * Xử lý click nằm ngoài 1 component
  * @param {ref} component Thành phần muốn click bên ngoài nó
  * @param {function} callback Hành động sau khi click outside
  */
