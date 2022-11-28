@@ -1,13 +1,18 @@
 <template>
-  <div class="context-menu" :style="{ width: props.width }">
-    <label for="" style="min-width: 110px">{{ props.label }}</label>
+  <div class="context-menu" ref="contextMenuRef" :style="{ width: props.width }">
+    <label
+      for=""
+      class="label"
+      :title="props.tooltip"
+      :style="{ 'min-width': props.labelWidth + 'px' }"
+      >{{ props.label }}</label
+    >
     <div
       class="tag-wrapper"
       :tabindex="props.tabindex"
       @click.self="isOpen = !isOpen"
-      @blur="isOpen = false"
     >
-      <div class="tag-picked" v-for="(tag, i) in tagPicked" :key="i">
+      <div class="tag-picked" v-for="tag in tagPicked" :key="tag.id">
         {{ tag.name }}
         <img
           src="../assets/Icons/ic_x.svg"
@@ -45,6 +50,7 @@
 <script setup>
 import { onUpdated, reactive, ref } from "vue";
 import BaseCheckbox from "./common/BaseCheckbox.vue";
+import useClickOutSide from '../hooks/useClickOutSide.js'
 
 const props = defineProps({
   label: {
@@ -54,6 +60,10 @@ const props = defineProps({
   tabindex: {
     type: Number,
     default: 0,
+  },
+  labelWidth: {
+    type: Number,
+    default: 110,
   },
   width: {
     type: String,
@@ -67,43 +77,65 @@ const props = defineProps({
     type: Array,
     default: [],
   },
+  tooltip: {
+    type: String,
+    default: "",
+  },
 });
 
-const emits = defineEmits(['change'])
+const emits = defineEmits(["change"]);
 
-const tagPicked = ref([]);
+const contextMenuRef = ref(null)
+const tagPicked = ref(props.default);
 const isOpen = ref(false);
+
 const options = reactive(
   props.options.map((option) => ({
     ...option,
-    isCheck: false,
+    isCheck: !!props.default.find((item) => item.id == option.id),
   }))
 );
 
-onUpdated(() => {
-   emits('change', tagPicked.value)
-})
+useClickOutSide(contextMenuRef, () => isOpen.value = false)
 
+/**
+ * Xử lý chọn tất cả
+ * @param checkbox: Trạng thái của ô checkbox
+ * @author LOINQ (04/11/2022)
+ */
 const handleSelectAll = (checkbox) => {
   options.forEach((option) => (option.isCheck = checkbox.isCheck));
+  emits("change", tagPicked.value);
 };
 
+/**
+ * Xử lý xóa 1 tag
+ * @param tag: Đối tượng tag đang được chọn
+ * @author LOINQ (04/11/2022)
+ */
 const handleRemoveTag = (tag) => {
   tagPicked.value = tagPicked.value.filter((element) => element.id !== tag.id);
   const index = options.findIndex((option) => option.id === tag.id);
   options[index].isCheck = false;
+  emits("change", tagPicked.value);
 };
 
+/**
+ * Xử lý sự kiện khi checkbox thay đổi
+ * @param checkbox: Trạng thái của ô checkbox
+ * @author LOINQ (04/11/2022)
+ */
 const handleChangeCheckbox = (checkbox) => {
   if (checkbox.isCheck) {
     const option = options.find((option) => option.id === checkbox.id);
-    option.isCheck = true
+    option.isCheck = true;
     tagPicked.value.push(option);
   } else {
     tagPicked.value = tagPicked.value.filter(
       (element) => element.id !== checkbox.id
     );
   }
+  emits("change", tagPicked.value);
 };
 </script>
 <style scoped>
@@ -117,7 +149,7 @@ const handleChangeCheckbox = (checkbox) => {
 .tag-wrapper {
   border-radius: 4px;
   border: 1px solid var(--border-color);
-  padding-right: 28px;
+  padding: 0 28px 0 4px;
   position: relative;
   min-height: 32px;
   display: flex;
@@ -179,8 +211,9 @@ const handleChangeCheckbox = (checkbox) => {
 
 .option-list {
   overflow: auto;
-  max-height: 80px;
-  padding: 4px 0 14px 0;
+  max-height: 100px;
+  padding: 4px 0 4px 0;
+  margin-bottom: 10px;
 }
 
 .option {
@@ -192,5 +225,10 @@ const handleChangeCheckbox = (checkbox) => {
 
 .option:hover {
   background-color: var(--hover-grid-line);
+}
+
+.option-list::-webkit-scrollbar {
+  width: 4px;
+  height: 4px;
 }
 </style>

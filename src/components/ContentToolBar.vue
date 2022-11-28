@@ -1,53 +1,140 @@
 <template>
   <div class="toolbar">
-    <BaseInputSearch />
+    <BaseInputSearch v-model="inputSearch" />
     <div class="toolbar__right">
-      <BaseButton style-button="style1" @click="isModalActive = true">Thêm</BaseButton>
-      <BaseButton style-button="style2">Xuất khẩu</BaseButton>
-      <BaseButton style-button="style4">
+      <BaseButton style-button="style1" @click="isShowModalForm = true"
+        >Thêm</BaseButton
+      >
+      <a href="http://localhost:5038/api/Employees/export">
+        <BaseButton style-button="style2" @click="handleExport">Xuất khẩu</BaseButton>
+      </a>
+      <BaseButton
+        style-button="style4 relative"
+        tabindex="0"
+        @click="isShowMoreAction = !isShowMoreAction"
+        @blur="isShowMoreAction = false"
+      >
         <img src="../assets/Icons/ic_More.png" alt="" />
+        <div
+          v-if="isShowMoreAction"
+          class="multi-delete shadow"
+          @click="isShowModalConfirm = true"
+        >
+          <img src="../assets/Icons/ic_delete.png" alt="" />
+          <span>Xóa</span>
+        </div>
       </BaseButton>
       <ModalForm
-        v-if="isModalActive"
+        v-if="isShowModalForm"
         width="850"
-        title-modal="Thêm hồ sơ Cán bộ, giáo viên"
+        :title-modal="resource.MODAL_TITLE_INSERT"
+        :data="employee"
         @close="closeModal"
         @submit="handleSubmit"
       />
+      <ModalReAuth
+        v-show="isShowModalConfirm"
+        title-modal="Thông báo"
+        message="Bạn có chắc chắn muốn xóa những Cán bộ giáo viên đang chọn không?"
+        width="350"
+        @close="isShowModalConfirm = false"
+        @submit="handleConfirm"
+      />
     </div>
+    <Toastify ref="toastifyRef" />
   </div>
 </template>
 <script setup>
-import { ref } from "vue";
+import axios from "axios";
+import { onBeforeMount, onMounted, ref, watch } from "vue";
+import employeeServices from "../api/employeeServices";
 import BaseInputSearch from "../components/common/BaseInputSearch.vue";
 import BaseButton from "./common/BaseButton.vue";
 import ModalForm from "./ModalForm.vue";
+import ModalReAuth from "./ModalReAuth.vue";
+import Toastify from "./Toastify.vue";
+import useDebounce from "../hooks/useDebounce.js";
+import resource from '../utils/resource.js'
 
-const emits = defineEmits(["changeData"]);
+const emits = defineEmits(["changeData", "DeleteGridItem", "search"]);
 
-const isModalActive = ref(false);
+const isShowModalForm = ref(false);
+const isShowModalConfirm = ref(false);
+const isShowMoreAction = ref(false);
+const toastifyRef = ref(null);
+const inputSearch = ref("");
+const inputDebounce = useDebounce(inputSearch, 700);
+const employee = ref({
+  employeeId: "",
+  employeeCode: "",
+  employeeName: "",
+  phoneNumber: "",
+  department: null,
+  subjectApply: [],
+  equipmentRoomApply: [],
+  isTrained: false,
+  dayOff: null,
+});
 
+/**
+ * Xử lý đóng modal
+ * Created By LOINQ (10/11/2022)
+ */
 const closeModal = () => {
-  isModalActive.value = !isModalActive.value;
+  isShowModalForm.value = !isShowModalForm.value;
 };
 
+watch(inputDebounce, () => {
+  emits("search", inputDebounce.value);
+});
+
+/**
+ * Xử lý reset lại modal
+ * Created By LOINQ (10/11/2022)
+ */
+watch(isShowModalForm, () => {
+  employee.value = {
+    employeeId: "",
+    employeeCode: "",
+    employeeName: "",
+    phoneNumber: "",
+    department: null,
+    subjectApply: [],
+    equipmentRoomApply: [],
+    isTrained: false,
+    dayOff: null,
+  };
+});
+
+/**
+ * Xử lý gửi dữ liệu lên server để thêm mới nhân viên
+ * Created By LOINQ (10/11/2022)
+ */
 const handleSubmit = async (employee) => {
-  isModalActive.value = false;
+  delete employee.employeeId;
   try {
-    await fetch("http://localhost:3000/employee", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(employee),
-    });
-    emits('changeData')
+    const result = await axios.post(
+      "http://localhost:5038/api/employees",
+      employee
+    );
+    toastifyRef.value.success(`Đã thêm thành công 1 bản ghi`);
+    emits("changeData");
+    isShowModalForm.value = false;
   } catch (error) {
-    console.error("Error:", error);
+    const { errorCode } = error.response.data;
+    toastifyRef.value.error(`Mã số cán bộ đã tồn tại`);
   }
 };
+/**
+ * Xử lý sự kiện sau khi người dùng click đồng ý vào modal confirm
+ * Created By LOINQ (20/11/2022)
+ */
+const handleConfirm = () => {
+  emits("DeleteGridItem");
+  isShowModalConfirm.value = false;
+};
 </script>
-<style scope>
+<style scoped>
 .toolbar {
   height: 64px;
   width: 100%;
@@ -59,5 +146,22 @@ const handleSubmit = async (employee) => {
   flex: 1;
   display: flex;
   justify-content: flex-end;
+}
+
+.multi-delete {
+  width: 120px;
+  position: absolute;
+  top: 40px;
+  right: 0;
+  background-color: white;
+  border-radius: 4px;
+  padding: 12px;
+  display: flex;
+  align-items: center;
+  z-index: 3;
+}
+
+.multi-delete > span {
+  padding-left: 12px;
 }
 </style>

@@ -1,6 +1,6 @@
 <template>
   <div class="base-select">
-    <label for="" style="min-width: 110px">{{ props.label }}</label>
+    <label for="" class="label" style="min-width: 110px">{{ props.label }}</label>
     <div
       class="selected"
       :tabindex="props.tabindex"
@@ -32,11 +32,8 @@ const props = defineProps({
   options: Array,
   label: String,
   default: {
-    type: Object,
-    default: {
-      id: "",
-      name: "",
-    },
+    type: String,
+    default: "",
   },
   tabindex: {
     type: Number,
@@ -45,7 +42,7 @@ const props = defineProps({
 });
 
 const emit = defineEmits(["input"]);
-const selected = ref(props.default.name);
+const selected = ref(props.default);
 const isOpen = ref(false);
 
 const handleClick = (option) => {

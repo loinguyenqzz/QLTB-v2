@@ -1,16 +1,24 @@
 <template>
   <div class="input-date">
     <label for="">{{ props.label }}</label>
-    <input type="date" />
+    <input type="date" :value="modelValue" @input="handleChange" />
   </div>
 </template>
 <script setup>
+import { ref } from "vue";
+
 const props = defineProps({
   label: {
     type: String,
     default: "",
   },
+  modelValue: String,
 });
+const emits = defineEmits(['update:modelValue'])
+const handleChange = (e) => {
+  emits('update:modelValue', e.target.value)
+}
+
 </script>
 <style scoped>
 .input-date {

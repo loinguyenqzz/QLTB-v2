@@ -1,6 +1,11 @@
 <template>
   <div class="base-input-search">
-    <input class="base-input-search__input" type="text" />
+    <input
+      class="base-input-search__input"
+      type="text"
+      :value="modelValue"
+      @input="$emit('update:modelValue', $event.target.value)"
+    />
     <img
       class="base-input-search__icon"
       src="../../assets/Icons/Ic_seerch.png"
@@ -8,8 +13,11 @@
     />
   </div>
 </template>
-<script></script>
-<style scope>
+<script setup>
+defineProps(["modelValue"]);
+defineEmits(["update:modelValue"]);
+</script>
+<style scoped>
 .base-input-search {
   height: 32px;
   width: 300px;

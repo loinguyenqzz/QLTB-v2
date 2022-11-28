@@ -13,7 +13,7 @@
   --link-color: #0097eb;
   --header-grid-panel: #f5f6fa;
   --line-grid-panel: #d5d8e6;
-  --label-color: #666666;
+  --label-color: #808080;
 }
 
 @font-face {
@@ -44,6 +44,10 @@
   box-shadow: 10px 0px 10px #d5d5d5;
 }
 
+.relative {
+  position: relative;
+}
+
 .flex {
   display: flex;
 }
@@ -55,6 +59,10 @@
 
 .sub-title {
   font-size: 14px;
+}
+
+.label {
+  color: var(--label-color);
 }
 
 ::-webkit-scrollbar {

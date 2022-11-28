@@ -1,61 +1,109 @@
 <template>
   <div class="input-group">
-    <label for="" class="input-label">
+    <label
+      for=""
+      :title="props.tooltip"
+      class="label"
+      :style="{ 'min-width': props.labelWidth + 'px'}"
+    >
       {{ props.label }}
-      <span v-if="props.isRequire" style="color: red">*</span>
+      <span v-if="isRequire" style="color: red">*</span>
     </label>
     <input
       type="text"
       class="base-input"
-      :class="[props.errorMessage ? 'base-input-error' : '']"
+      :class="{ 'base-input-error': errorMessage }"
       ref="inputRef"
-      @input="handleInput"
-      :value="props.modelValue"
+      :value="modelValue"
+      @blur="handleValidate"
+      @input="handleChange"
+      @focus="errorMessage = ''"
     />
-    <div v-if="props.errorMessage" class="error-message">
+    <div v-if="errorMessage" class="error-message">
       <div class="triangle"></div>
-      <span>{{ props.errorMessage }}</span>
+      <span>{{ errorMessage }}</span>
     </div>
   </div>
 </template>
 <script setup>
-import { onMounted, ref } from "vue";
+import { onMounted, reactive, ref, toRef, watch } from "vue";
+import validate from "../hooks/useValidate";
 
+/**
+ * @label: Nội dung bên trong thẻ label nhận từ bên ngoài
+ * @roles: Các role của việc validate dữ liệu
+ * @modelValue: Custom v-model
+ * @focus: Xác định input này có focus vào hay không
+ */
 const props = defineProps({
-  isRequire: {
-    type: Boolean,
-    default: false,
-  },
   label: String,
-  errorMessage: {
-    type: String,
-    default: null,
+  labelWidth: {
+    type: Number,
+    default: 110,
+  },
+  roles: {
+    type: Array,
+    default: [],
   },
   modelValue: {
     type: String,
-    default: "",
+    default: null,
   },
   focus: {
-    type: Boolean,
-    default: false,
+    type: Number,
+    default: -99999,
   },
+  tooltip: {
+    type: String,
+    default: ""
+  }
 });
 
-const emits = defineEmits(["update:modelValue"]);
+const emits = defineEmits(["update:modelValue", "validate"]);
+
+const isRequire = props.roles.includes("isRequire");
 const inputRef = ref(null);
+const inputValue = ref(props.modelValue);
+const errorMessage = ref("");
 
 onMounted(() => {
-  if (props.focus) {
+  if (props.focus > -1) {
     inputRef.value.focus();
   }
 });
 
-const handleInput = (e) => {
+watch(toRef(props, 'focus'), (value) => {
+  if (value > 0 ) {
+    inputRef.value.focus();
+  }
+})
+
+watch(toRef(props, "modelValue"), (value) => {
+  inputValue.value = value;
+});
+
+/**
+ * Validate theo các roles được truyền vào
+ * Created by LOINQ (10/11/2022)
+ */
+const handleValidate = () => {
+  props.roles.forEach((role) => {
+    errorMessage.value = validate[role](inputValue.value);
+  });
+  emits("validate", !errorMessage.value);
+};
+
+/**
+ * Truyền đi giá trị của input để kích hoạt v-model
+ * Created by LOINQ (10/11/2022)
+ */
+const handleChange = (e) => {
   emits("update:modelValue", e.target.value);
 };
 </script>
-<style scope>
+<style scoped>
 .base-input {
+  flex: 1;
   height: 32px;
   padding: 0 12px;
   border-radius: 4px;
@@ -107,10 +155,5 @@ const handleInput = (e) => {
 
 .input-group:hover .error-message {
   display: flex !important;
-}
-
-.input-label {
-  color: var(--label-color);
-  min-width: 110px;
 }
 </style>

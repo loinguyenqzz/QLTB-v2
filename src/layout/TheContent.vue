@@ -1,8 +1,32 @@
 <template>
-  <div v-if="data.length > 0" class="content">
-    <ContentToolBar @changeData="getAll" />
-    <ContentTable :headers="headers" :items="data" @changeData="getAll" />
-    <ContentFooter />
+  <ModalForm
+    v-if="isModalActive"
+    width="850"
+    title-modal="Thêm hồ sơ Cán bộ, giáo viên"
+    @close="isModalActive = false"
+    @submit="handleSubmit"
+  />
+  <Toastify ref="toastifyRef" />
+  <Loading v-if="isLoading" />
+  <div v-if="totalPages > 0 || params.keyword" class="content">
+    <ContentToolBar
+      @changeData="getEmployeeByFilter"
+      @DeleteGridItem="handleDeleteMutiple"
+      @search="(value) => (params.keyword = value)"
+    />
+    <ContentTable
+      :headers="headers"
+      :items="employees"
+      @changeData="getEmployeeByFilter"
+      @selectedGrid="(value) => (checkedList = value)"
+    />
+    <ContentFooter
+      :totalPages="totalPages"
+      :totalRecords="totalRecords"
+      :pageSize="params.pageSize"
+      :pageNumber="params.pageNumber"
+      @changePageNumber="(value) => (params.pageNumber = value)"
+    />
   </div>
   <div v-else class="content--non-data">
     <img src="../assets/Icons/ic_Alert.png" alt="" />
@@ -16,13 +40,6 @@
       <BaseButton>Nhập khẩu</BaseButton>
     </div>
   </div>
-      <ModalForm
-      v-if="isModalActive"
-      width="850"
-      title-modal="Thêm hồ sơ Cán bộ, giáo viên"
-      @close="closeModal"
-      @submit="handleSubmit"
-    />
 </template>
 
 <script setup>
@@ -31,16 +48,15 @@ import ContentTable from "../components/ContentTable.vue";
 import ContentFooter from "../components/ContentFooter.vue";
 import BaseButton from "../components/common/BaseButton.vue";
 import ModalForm from "../components/ModalForm.vue";
-import useData from '../hooks/useData'
-import { ref, watch } from "vue";
+import Loading from "../components/Loading.vue";
+import Toastify from "../components/Toastify.vue";
+import { onMounted, ref, watch } from "vue";
+import employeeServices from "../api/employeeServices";
 
-const {data, getAll} = useData()
-
-const isModalActive = ref(false);
 const headers = [
   {
     text: "Số hiệu cán bộ",
-    width: 100,
+    width: 120,
   },
   {
     text: "Họ và tên",
@@ -48,7 +64,7 @@ const headers = [
   },
   {
     text: "Số điện thoại",
-    width: 100,
+    width: 110,
   },
   {
     text: "Tổ chuyên môn",
@@ -56,42 +72,116 @@ const headers = [
   },
   {
     text: "QL theo môn",
-    width: 130,
+    width: 100,
+    tooltip: "Quản lý theo môn",
   },
   {
     text: "QL kho phòng",
     width: 130,
+    tooltip: "Quản lý kho phòng",
   },
   {
     text: "Đào tạo QLTB",
-    width: 100,
+    width: 120,
+    tooltip: "Đào tạo quản lý thiết bị",
   },
   {
     text: "Đang làm việc",
-    width: 100,
+    width: 120,
   },
 ];
-getAll()
+const isModalActive = ref(false);
+const isLoading = ref(false);
+const employees = ref([]);
+const totalRecords = ref(0);
+const totalPages = ref(0);
+const checkedList = ref([]);
+const toastifyRef = ref(null);
+const params = ref({
+  pageSize: 20,
+  pageNumber: 1,
+  keyword: "",
+});
 
-watch(data, () => getAll())
+/**
+ * Call api lấy dữ liệu nhân viên khi comonent được mount
+ */
+onMounted(() => {
+  getEmployeeByFilter();
+});
 
-const closeModal = () => {
-  isModalActive.value = false;
+/**
+ * Call api mõi khi search
+ */
+watch(
+  () => params.value.keyword,
+  () => {
+    params.value.pageNumber = 1;
+    getEmployeeByFilter();
+  }
+);
+
+/**
+ * Call api mõi khi chuyển page
+ * Created by LOINQ - (20//11/2022)
+ */
+watch(
+  () => params.value.pageNumber,
+  () => getEmployeeByFilter()
+);
+
+/**
+ * Call api lấy dữ liệu có phân trang hiển thị ra grid
+ * @author LOINQ(10/11/2022)
+ */
+const getEmployeeByFilter = async () => {
+  try {
+    isLoading.value = true;
+    const response = await employeeServices.getByFilter(params.value);
+    const results = response.data;
+    totalPages.value = results.totalPages;
+    if (params.value.pageNumber > totalPages.value) {
+      params.value.pageNumber = totalPages.value;
+      getEmployeeByFilter();
+    }
+    employees.value = results.data;
+    totalRecords.value = results.totalRecords;
+    isLoading.value = false;
+  } catch (error) {
+    console.log(error);
+    isLoading.value = false;
+  }
 };
 
+/**
+ * Xử lý gửi dữ liệu lên server khi người dùng submit form
+ * @async
+ * @param: employee: dữ liệu thông tin nhân viên
+ * @author LOINQ(11/11/2022)
+ */
 const handleSubmit = async (employee) => {
   isModalActive.value = false;
   try {
-    await fetch("http://localhost:3000/employee", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(employee),
-    });
-    emits("changeData");
   } catch (error) {
     console.error("Error:", error);
+  }
+};
+
+/**
+ * Xử lý xóa nhiều bản ghi
+ * @author LOINQ(16/11/2022)
+ */
+const handleDeleteMutiple = async () => {
+  if (checkedList.value.length == 0) {
+    toastifyRef.value.warning(`Bạn chưa chọn bản ghi nào`);
+  } else {
+    for (let item of checkedList.value) {
+      await employeeServices.delele(item);
+    }
+    getEmployeeByFilter();
+    toastifyRef.value.success(
+      `Đã xóa thành công ${checkedList.value.length} bản ghi`
+    );
   }
 };
 </script>

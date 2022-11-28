@@ -2,6 +2,7 @@
 import TheSidebar from "./layout/TheSidebar.vue";
 import TheHeader from "./layout/TheHeader.vue";
 import TheContent from "./layout/TheContent.vue";
+
 </script>
 
 <template>

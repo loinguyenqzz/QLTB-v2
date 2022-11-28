@@ -5,7 +5,7 @@
         <img src="../assets/Images/default_avatar.png" alt="" />
         <div class="btn-chose-file">Chọn ảnh</div>
         <span style="font-size: 14px">{{
-          employee.employeeName || "Họ và tên"
+          employee.fullName || "Họ và tên"
         }}</span>
         <span style="font-size: 12px">{{
           employee.employeeCode || "Số hiệu cán bộ"
@@ -20,48 +20,67 @@
           <FormGroupInput
             label="Số hiệu cán bộ"
             v-model="employee.employeeCode"
-            :error-message="errorMessageEmployeeCode"
-            :focus="true"
-            :is-require="true"
+            :focus="focusInput"
+            :roles="['isRequire']"
+            @validate="(isValidate) => (submitable = isValidate)"
           />
           <FormGroupInput
             label="Họ và tên"
-            v-model="employee.employeeName"
-            :error-message="errorMessageEmployeeName"
-            :is-require="true"
+            v-model="employee.fullName"
+            :label-width="90"
+            :roles="['isRequire']"
+            @validate="(isValidate) => (submitable = isValidate)"
           />
           <FormGroupInput
             label="Số điện thoại"
             v-model="employee.phoneNumber"
+            :roles="['phoneNumber']"
+            @validate="(isValidate) => (submitable = isValidate)"
           />
-          <FormGroupInput label="Email" v-model="employee.email" />
+          <FormGroupInput
+            label="Email"
+            v-model="employee.email"
+            :labelWidth="90"
+            :roles="['email']"
+            @validate="(isValidate) => (submitable = isValidate)"
+          />
           <BaseSelect
             label="Tổ bộ môn"
-            :options="department"
-            @input="(option) => (employee.department = option.name)"
+            :default="employee.department?.departmentName"
+            :options="departmentOptions"
+            @input="handleGetValueDepartment"
           />
           <ContextMenu
             label="QL theo môn"
-            :options="subject"
-            @change="(selected) => (employee.subjectApply = selected)"
+            :label-width="90"
+            tooltip="Quản lý theo môn"
+            :default="defaultSubjectOptions"
+            :options="subjectOptions"
+            @change="handleGetValueSubjectApply"
           />
           <ContextMenu
             label="QL kho, phòng"
             width="100%"
-            :options="equipmentRoom"
-            @change="(selected) => (employee.equipmentRoomAplly = selected)"
+            tooltip="Quản lý kho, phòng"
+            :default="defaultEquipmentRoomOptions"
+            :options="equipmentRoomOptions"
+            @change="handleGetEquipmentRoomApply"
           />
           <div class="work-infor">
             <BaseCheckbox
+              :isCheck="employee.isTrained"
               label="Trình độ nghiệp vụ QLTB"
-              @onChange="(state) => (employee.isTraned = state.isCheck)"
+              tooltip="Trình độ nghiệp vụ quản lý thiết bị"
+              @onChange="(state) => (employee.isTrained = state.isCheck)"
             />
             <BaseCheckbox
+              :isCheck="isWorking"
               label="Đang làm việc"
-              @onChange="(state) => (employee.isWorking = state.isCheck)"
+              @onChange="handleChangeIsWorking"
             />
             <BaseInputDate
-              :style="{ visibility: employee.isWorking ? 'hidden' : 'visible' }"
+              :style="{ visibility: !isWorking ? 'visible' : 'hidden' }"
+              v-model="employee.dayOff"
               label="Ngày nghỉ việc"
             />
           </div>
@@ -69,7 +88,10 @@
       </div>
     </template>
     <template #submit>
-      <BaseButton @click="handleSubmit">Lưu</BaseButton>
+      <BaseButton @click="handleSubmit" @keyup.tab="focusInput++"
+        >Lưu</BaseButton
+      >
+      <Toastify ref="toastifyRef" />
     </template>
   </Modal>
 </template>
@@ -81,11 +103,18 @@ import ContextMenu from "./ContextMenu.vue";
 import BaseCheckbox from "./common/BaseCheckbox.vue";
 import BaseInputDate from "./common/BaseInputDate.vue";
 import BaseButton from "./common/BaseButton.vue";
-import { computed, onMounted, reactive, ref, toRef, watch } from "vue";
-import useData from "../hooks/useData";
-
-const { data, getAll, getMaxEmployeeCode, checkDuplicate } = useData();
-getAll();
+import Toastify from "./Toastify.vue";
+import { department, equipmentRoom, subject } from "../utils/entities";
+import {
+  computed,
+  onMounted,
+  reactive,
+  readonly,
+  ref,
+  toRef,
+  watch,
+} from "vue";
+import employeeServices from "../api/employeeServices";
 
 const props = defineProps({
   titleModal: {
@@ -95,137 +124,137 @@ const props = defineProps({
   data: {
     type: Object,
     default: {
+      employeeId: "",
       employeeCode: "",
       employeeName: "",
       phoneNumber: "",
-      department: "",
+      department: null,
       subjectApply: [],
-      equipmentRoomAplly: [],
-      isTraned: false,
-      isWorking: false,
+      equipmentRoomApply: [],
+      isTrained: false,
+      dayOff: null,
     },
   },
 });
 
 const emits = defineEmits(["submit"]);
 
+const focusInput = ref(0)
 const inputEmployeeCode = ref(null);
-const errorMessageEmployeeCode = ref("");
-const errorMessageEmployeeName = ref("");
+const employee = ref({ ...props.data });
+const submitable = ref(false);
+const toastifyRef = ref(null);
+const isWorking = ref(!employee.value.dayOff);
 
-const department = [
-  {
-    id: "d-1",
-    name: "Tổ Toán - Tin",
-  },
-  {
-    id: "d-2",
-    name: "Tổ Hóa - Sinh",
-  },
-  {
-    id: "d-3",
-    name: "Tổ Lý",
-  },
-  {
-    id: "d-4",
-    name: "Tổ Anh - Văn",
-  },
-  {
-    id: "d-5",
-    name: "Tổ Lý",
-  },
-];
-
-const subject = [
-  {
-    id: "s-1",
-    name: "Toán",
-  },
-  {
-    id: "s-2",
-    name: "Hóa",
-  },
-  {
-    id: "s-3",
-    name: "Lý",
-  },
-  {
-    id: "s-4",
-    name: "Anh",
-  },
-  {
-    id: "s-5",
-    name: "Văn",
-  },
-  {
-    id: "s-6",
-    name: "Sinh",
-  },
-];
-
-const equipmentRoom = [
-  {
-    id: "e-1",
-    name: "Kho thiết bị chung",
-  },
-  {
-    id: "e-2",
-    name: "Phòng hóa - sinh",
-  },
-  {
-    id: "e-3",
-    name: "Phòng tin học",
-  },
-  {
-    id: "e-3",
-    name: "Phòng tin học",
-  },
-];
-
-const employee = reactive({
-  employeeCode: "",
-  employeeName: "",
-  phoneNumber: "",
-  department: "",
-  subjectApply: [],
-  equipmentRoomAplly: [],
-  isTraned: false,
-  isWorking: false,
+onMounted(() => {
+  if (!employee.value.employeeCode) {
+    getMaxCode();
+  }
 });
 
-watch(data, () => {
-  employee.employeeCode = `SHCB${getMaxEmployeeCode() + 1}`;
+/**
+ * Lấy mã số cán bộ lớn nhất
+ * @author LOINQ - 20/11/2022
+ */
+const getMaxCode = async () => {
+  const response = await employeeServices.getMaxCode();
+  employee.value.employeeCode = "SHCB" + (response.data + 1);
+};
+/**
+ * Convert sang đối tượng có thuộc tính đồng nhất
+ */
+const defaultEquipmentRoomOptions = computed(() => {
+  return employee.value.equipmentRoomApply?.map((item) => ({
+    id: item.equipmentRoomId,
+    name: item.equipmentRoomName,
+  }));
 });
+const defaultSubjectOptions = computed(() => {
+  return employee.value.subjectApply?.map((item) => ({
+    id: item.subjectId,
+    name: item.subjectName,
+  }));
+});
+/**
+ * Convert sang đối tượng có thuộc tính đồng nhất
+ */
+const departmentOptions = department.map((item) => ({
+  id: item.departmentId,
+  name: item.departmentName,
+}));
 
-watch(toRef(employee, "employeeCode"), () => {
-  if (!employee.employeeCode) {
-    errorMessageEmployeeCode.value = "Trường này không được để trống";
+const subjectOptions = subject.map((item) => ({
+  id: item.subjectId,
+  name: item.subjectName,
+}));
+
+const equipmentRoomOptions = equipmentRoom.map((item) => ({
+  id: item.equipmentRoomId,
+  name: item.equipmentRoomName,
+}));
+
+/**
+ * Xử lý sự kiện khi người dùng ấn submit
+ */
+const handleSubmit = () => {
+  if (!isWorking.value && !employee.value.dayOff) {
+    toastifyRef.value.error("Bạn phải chọn ngày nghỉ việc");
+  } else if (!employee.value.fullName) {
+    toastifyRef.value.error("Bạn phải nhập tên Cán bộ");
+  } else if (!employee.value.employeeCode) {
+    toastifyRef.value.error("Bạn phải nhập số hiệu cán bộ");
   } else {
-    if (checkDuplicate(employee.employeeCode)) {
-      errorMessageEmployeeCode.value = "Số hiệu cán bộ đã tồn tại";
+    if (submitable.value) {
+      emits("submit", employee.value);
     } else {
-      errorMessageEmployeeCode.value = "";
+      toastifyRef.value.error("Bạn phải nhập các trường đúng định dạng");
     }
   }
-});
-
-watch(toRef(employee, "employeeName"), () => {
-  errorMessageEmployeeName.value = !employee.employeeName
-    ? "Trường này không được để trống"
-    : "";
-});
-
-const handleSubmit = () => {
-  if (!employee.employeeName) {
-    errorMessageEmployeeName.value = "Trường này không được để trống";
-  } else if (
-    !errorMessageEmployeeCode.value &&
-    !errorMessageEmployeeName.value
-  ) {
-    emits("submit", employee);
-  } else {
-  }
 };
+
+/**
+ * Lấy từ liệu từ context menu mapping vào subject apply
+ * @Created by LOINQ (20/11/2022)
+ */
+const handleGetValueSubjectApply = (selected) => {
+  employee.value.subjectApply = selected.map((item) => ({
+    subjectId: item.id,
+    subjectName: item.name,
+  }));
+};
+
+/**
+ * Lấy từ liệu từ context menu mapping vào equipment room apply
+ * @Created by LOINQ (20/11/2022)
+ */
+const handleGetEquipmentRoomApply = (selected) => {
+  employee.value.equipmentRoomApply = selected.map((item) => ({
+    equipmentRoomId: item.id,
+    equipmentRoomName: item.name,
+  }));
+};
+
+/**
+ * Lấy từ liệu từ select mapping vào department
+ * @Created by LOINQ (20/11/2022)
+ */
+const handleGetValueDepartment = (selected) => {
+  employee.value.department = {
+    departmentId: selected.id,
+    departmentName: selected.name,
+  };
+};
+
+/**
+ * Xử lý khi người dùng click vào checkbox đang làm việc
+ * @Created by LOINQ (20/11/2022)
+ */
+const handleChangeIsWorking = (state) => {
+  isWorking.value = state.isCheck;
+  employee.value.dayOff = null;
+};
+
+const handleValidate = (isValidate) => {};
 </script>
 
 <style scoped>

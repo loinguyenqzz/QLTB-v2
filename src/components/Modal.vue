@@ -31,6 +31,10 @@ const emit = defineEmits(["close"]);
 const modalStyle = {
   "max-width": props.width + "px",
 };
+
+/**
+ * Xử lý đóng modal
+ */
 const handleCloseModal = () => {
   emit('close')
 };

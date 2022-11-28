@@ -1,5 +1,5 @@
 <template>
-  <div class="common" :class="props.styleButton">
+  <div tabindex="0" class="common" :class="props.styleButton">
     <slot></slot>
   </div>
 </template>

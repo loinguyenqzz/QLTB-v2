@@ -5,11 +5,11 @@
     role="checkbox"
     @click.stop="handleClick"
   >
-    <span class="base-checkbox__input">
+    <span class="base-checkbox__input" tabindex="0">
       <img v-if="isActive" src="../../assets/Icons/ic_Checkbox_Active.png" />
       <img v-else src="../../assets/Icons/ic_Checkbox_Inactive.png" />
     </span>
-    <span style="margin-left: 12px;">{{ props.label }}</span>
+    <label :title="props.tooltip" style="margin-left: 12px;">{{ props.label }}</label>
   </div>
 </template>
 <script setup>
@@ -23,6 +23,10 @@ const props = defineProps({
   label: {
     type: String,
     default: "",
+  },
+  tooltip: {
+    type: String,
+    default: ""
   },
   id: {
     type: String,

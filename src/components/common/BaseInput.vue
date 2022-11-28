@@ -1,8 +1,16 @@
 <template>
-  <input type="text" class="base-input" />
+  <input
+    type="text"
+    class="base-input"
+    :modelValue="modelValue"
+    @input="$emit('update:modelValue', $event.target.value)"
+  />
 </template>
-<script></script>
-<style scope>
+<script setup>
+defineProps(["modelValue"]);
+defineEmits(["update:modelValue"]);
+</script>
+<style scoped>
 .base-input {
   height: 32px;
   padding: 0 12px;
