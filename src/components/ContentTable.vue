@@ -79,7 +79,6 @@
       @close="closeModal"
       @submit="handleDelete"
     />
-    <Toastify ref="toastifyRef" />
     <ModalForm
       v-if="isModalFormActive"
       width="850"
@@ -91,13 +90,14 @@
   </div>
 </template>
 <script setup>
-import { onMounted, reactive, ref, toRef, watch } from "vue";
+import { inject, onMounted, reactive, ref, toRef, watch } from "vue";
 import BaseCheckbox from "./common/BaseCheckbox.vue";
 import ModalReAuth from "./ModalReAuth.vue";
 import ModalForm from "./ModalForm.vue";
-import Toastify from "./Toastify.vue";
 import employeeServices from "../api/employeeServices";
 import axios from "axios";
+import resources from "../utils/resources";
+import enums from "../utils/enums";
 
 const props = defineProps({
   headers: {
@@ -118,7 +118,7 @@ const defaultData = ref({});
 const isModalFormActive = ref(false);
 const isModalActive = ref(false);
 const reAuthId = ref("");
-const toastifyRef = ref(null);
+const { setToast } = inject("toast");
 
 onMounted(() => {
   convertData();
@@ -176,27 +176,31 @@ const handleDelete = async (id) => {
   isModalActive.value = false;
   try {
     const result = await employeeServices.delele(id);
-    toastifyRef.value.success(`Đã xóa thành công ${result.data} bản ghi`);
+    setToast("success", `Đã xóa thành công ${result.data} bản ghi`);
     emits("changeData");
   } catch (error) {
-    console.log(error);
+    setToast("error", handleErrorResponse(error));
   }
 };
 
 /**
  * Xử lý sự kiện khi người dùng click vào icon chỉnh sửa
- * @param employee - Đối tượng nhân viên 
+ * @param employee - Đối tượng nhân viên
  * @author LOINQ(10/11/2022)
  */
 const handleEditEmployee = async (employee) => {
   try {
-    const result = await employeeServices.update(employee)
+    const result = await employeeServices.update(employee);
     emits("changeData");
-    toastifyRef.value.success("Đã cập nhật 1 bản ghi")
+    setToast("success", resources.MESSAGE_SUCCESS_UPDATE);
     isModalFormActive.value = false;
   } catch (error) {
     const { errorCode } = error.response.data;
-    toastifyRef.value.error(`Mã số cán bộ đã tồn tại`);
+    if (errorCode == enums.ERROR_CODE.DUPLICATE) {
+      setToast("error", resources.MESSAGE_DUPLICATE_EMPLOYEE_CODE);
+    } else {
+      setToast("error", handleErrorResponse(error));
+    }
   }
 };
 
@@ -212,7 +216,7 @@ const handleClickBtnDelete = (id) => {
 
 /**
  * Xử lý sự kiện khi người dùng click vào icon chỉnh sửa
- * @param employee: Đối tượng nhân viên 
+ * @param employee: Đối tượng nhân viên
  * @author LOINQ(10/11/2022)
  */
 const handleClickBtnEdit = (item) => {

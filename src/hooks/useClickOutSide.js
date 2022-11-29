@@ -5,7 +5,7 @@ import { onBeforeUnmount, onMounted } from "vue";
  * @param {ref} component Thành phần muốn click bên ngoài nó
  * @param {function} callback Hành động sau khi click outside
  */
-export default function (component, callback) {
+const useClickOutSide = (component, callback) => {
   if (!component) return;
   const listener = (event) => {
     if (
@@ -27,3 +27,5 @@ export default function (component, callback) {
 
   return { listener };
 }
+
+export default useClickOutSide

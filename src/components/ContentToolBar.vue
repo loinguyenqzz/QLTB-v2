@@ -41,29 +41,28 @@
         @submit="handleConfirm"
       />
     </div>
-    <Toastify ref="toastifyRef" />
   </div>
 </template>
 <script setup>
 import axios from "axios";
-import { onBeforeMount, onMounted, ref, watch } from "vue";
+import { inject, onBeforeMount, onMounted, ref, watch } from "vue";
 import employeeServices from "../api/employeeServices";
 import BaseInputSearch from "../components/common/BaseInputSearch.vue";
 import BaseButton from "./common/BaseButton.vue";
 import ModalForm from "./ModalForm.vue";
 import ModalReAuth from "./ModalReAuth.vue";
-import Toastify from "./Toastify.vue";
 import useDebounce from "../hooks/useDebounce.js";
 import resources from '../utils/resources.js'
+import enums from '../utils/enums'
 
 const emits = defineEmits(["changeData", "DeleteGridItem", "search"]);
 
 const isShowModalForm = ref(false);
 const isShowModalConfirm = ref(false);
 const isShowMoreAction = ref(false);
-const toastifyRef = ref(null);
 const inputSearch = ref("");
 const inputDebounce = useDebounce(inputSearch, 700);
+const {setToast} = inject("toast")
 const employee = ref({
   employeeId: "",
   employeeCode: "",
@@ -114,12 +113,16 @@ const handleSubmit = async (employee) => {
   delete employee.employeeId;
   try {
     const result = await employeeServices.insert(employee)
-    toastifyRef.value.success(resources.MESSAGE_SUCCESS_INSERT);
+   setToast("success",resources.MESSAGE_SUCCESS_INSERT);
     emits("changeData");
     isShowModalForm.value = false;
   } catch (error) {
-    const { errorCode } = error.response.data;
-    toastifyRef.value.error(resources.MESSAGE_DUPLICATE_EMPLOYEE_CODE);
+     const { errorCode } = error.response.data;
+    if (errorCode == enums.ERROR_CODE.DUPLICATE) {
+      setToast("error", resources.MESSAGE_DUPLICATE_EMPLOYEE_CODE);
+    } else {
+      setToast("error", handleErrorResponse(error));
+    }
   }
 };
 /**
@@ -156,6 +159,10 @@ const handleConfirm = () => {
   display: flex;
   align-items: center;
   z-index: 3;
+}
+
+.multi-delete:hover {
+  background-color: var(--hover-grid-line);
 }
 
 .multi-delete > span {

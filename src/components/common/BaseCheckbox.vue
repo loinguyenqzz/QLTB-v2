@@ -3,7 +3,8 @@
     class="base-checkbox"
     :aria-checked="isActive"
     role="checkbox"
-    @click.stop="handleClick"
+    @click.stop="handleChangeState"
+    @keyup.enter="handleChangeState"
   >
     <span class="base-checkbox__input" tabindex="0">
       <img v-if="isActive" src="../../assets/Icons/ic_Checkbox_Active.png" />
@@ -61,7 +62,7 @@ watch(isActive, () => {
   });
 })
 
-const handleClick = () => {
+const handleChangeState = () => {
   isActive.value = !isActive.value;
 };
 

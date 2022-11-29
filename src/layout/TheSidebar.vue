@@ -1,5 +1,5 @@
 <template>
-  <div class="sidebar" :class="{'sidebar-mini' : isSidebarMini}">
+  <div class="sidebar" :class="{ 'sidebar-mini': isSidebarMini }">
     <div class="sidebar-header">
       <img
         class="sidebar-header__logo"
@@ -7,7 +7,9 @@
         alt=""
         v-show="!isSidebarMini"
       />
-      <span class="sidebar-header__title" v-show="!isSidebarMini">Thiết bị</span>
+      <span class="sidebar-header__title" v-show="!isSidebarMini"
+        >Thiết bị</span
+      >
       <img
         class="btn-navigation"
         src="../assets/Icons/ic_navigation.svg"
@@ -16,16 +18,20 @@
       />
     </div>
     <div class="sidebar-menu">
-      <div
-        class="sidebar-item"
+      <router-link
         v-for="(item, index) in sidebarItems"
         :key="index"
-        @click="sidebarItemActive = index"
-        :class="{'sidebar-item--active' : sidebarItemActive == index}"
+        :to="{ name: item.name }"
       >
-        <img :src="item.icon" alt="" />
-        <span v-show="!isSidebarMini">{{ item.name }}</span>
-      </div>
+        <div
+          class="sidebar-item"
+          @click="sidebarItemActive = index"
+          :class="{ 'sidebar-item--active': sidebarItemActive == index }"
+        >
+          <img :src="item.icon" alt="" />
+          <span v-show="!isSidebarMini">{{ item.title }}</span>
+        </div>
+      </router-link>
     </div>
   </div>
 </template>
@@ -33,31 +39,35 @@
 <script setup>
 import { ref } from "vue";
 
-const sidebarItemActive = ref(4)
-const isSidebarMini = ref(false)
+const sidebarItemActive = ref(4);
+const isSidebarMini = ref(false);
 const sidebarItems = [
   {
     icon: "../src/assets/Icons/ic_TongQuan.svg",
-    name: "Tổng quan",
+    title: "Tổng quan",
+    name: "Home",
   },
   {
     icon: "../src/assets/Icons/ic_ThietBi.svg",
-    name: "Thiết bị",
+    title: "Thiết bị",
+    name: "Equipment",
   },
   {
     icon: "../src/assets/Icons/ic_MuonTra.svg",
-    name: "Mượn trả",
+    title: "Mượn trả",
+    name: "Order",
   },
   {
     icon: "../src/assets/Icons/ic_BaoCao.svg",
-    name: "Báo cáo",
+    title: "Báo cáo",
+    name: "Report",
   },
   {
     icon: "../src/assets/Icons/ic_HeThong.svg",
-    name: "Hệ thống",
+    title: "Hệ thống",
+    name: "System",
   },
 ];
-
 </script>
 
 <style scoped>
@@ -114,6 +124,10 @@ const sidebarItems = [
   color: var(--green);
   position: relative;
   background-color: #404f64;
+}
+
+.sidebar-item:hover {
+  background-color: var(--hover-sidebar);
 }
 
 .sidebar-item--active::before {

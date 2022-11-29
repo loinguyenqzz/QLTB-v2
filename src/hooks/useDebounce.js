@@ -6,15 +6,15 @@ import {ref, watch } from "vue";
  * @param {Number} delay: Thời gian delay để thay đổi dữ liệu
  * @return Dữ liệu sau 1 thời gian delay
  */
-export default function useDebounce(input, delay) {
+ const useDebounce = (input, delay) => {
     const debounce = ref(null)
     let handler = null
     watch(input, (value) => {
         clearTimeout(handler)
         handler = setTimeout(() => {
             debounce.value = value
-            console.log(value);
         }, delay)
     })
     return debounce
 };
+export default useDebounce

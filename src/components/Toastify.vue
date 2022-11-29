@@ -27,6 +27,7 @@ const classType = ref("");
 
 /**
  * Xử lý đóng toastify
+ * @author LOINQ (10/11/2022)
  */
 const handleHidden = () => {
   setTimeout(() => {

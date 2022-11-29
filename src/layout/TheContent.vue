@@ -6,7 +6,6 @@
     @close="isModalActive = false"
     @submit="handleSubmit"
   />
-  <Toastify ref="toastifyRef" />
   <Loading v-if="isLoading" />
   <div v-if="totalPages > 0 || params.keyword" class="content">
     <ContentToolBar
@@ -49,9 +48,9 @@ import ContentFooter from "../components/ContentFooter.vue";
 import BaseButton from "../components/common/BaseButton.vue";
 import ModalForm from "../components/ModalForm.vue";
 import Loading from "../components/Loading.vue";
-import Toastify from "../components/Toastify.vue";
-import { onMounted, ref, watch } from "vue";
+import { inject, onMounted, ref, watch } from "vue";
 import employeeServices from "../api/employeeServices";
+import handleErrorResponse from "../hooks/handleErrorResponse";
 
 const headers = [
   {
@@ -96,7 +95,9 @@ const employees = ref([]);
 const totalRecords = ref(0);
 const totalPages = ref(0);
 const checkedList = ref([]);
-const toastifyRef = ref(null);
+
+const { setToast } = inject("toast");
+
 const params = ref({
   pageSize: 20,
   pageNumber: 1,
@@ -105,6 +106,7 @@ const params = ref({
 
 /**
  * Call api lấy dữ liệu nhân viên khi comonent được mount
+ * Created by LOINQ - (20//11/2022)
  */
 onMounted(() => {
   getEmployeeByFilter();
@@ -112,6 +114,7 @@ onMounted(() => {
 
 /**
  * Call api mõi khi search
+ * Created by LOINQ - (20//11/2022)
  */
 watch(
   () => params.value.keyword,
@@ -148,7 +151,8 @@ const getEmployeeByFilter = async () => {
     totalRecords.value = results.totalRecords;
     isLoading.value = false;
   } catch (error) {
-    console.log(error);
+    const message = handleErrorResponse(error);
+    setToast("error", message);
     isLoading.value = false;
   }
 };
@@ -163,7 +167,7 @@ const handleSubmit = async (employee) => {
   isModalActive.value = false;
   try {
   } catch (error) {
-    console.error("Error:", error);
+    setToast("error", handleErrorResponse(error));
   }
 };
 
@@ -173,18 +177,21 @@ const handleSubmit = async (employee) => {
  */
 const handleDeleteMutiple = async () => {
   if (checkedList.value.length == 0) {
-    toastifyRef.value.warning(`Bạn chưa chọn bản ghi nào`);
+    setToast("warning", "Bạn chưa chọn bản ghi nào");
   } else {
-    // for (let item of checkedList.value) {
-    //   await employeeServices.delele(item);
-    // }
-    await employeeServices.multipleDelete({
-      employeeIds: checkedList.value.toString(),
-    });
-    getEmployeeByFilter();
-    toastifyRef.value.success(
-      `Đã xóa thành công ${checkedList.value.length} bản ghi`
-    );
+    try {
+      await employeeServices.multipleDelete({
+        employeeIds: checkedList.value.toString(),
+      });
+      getEmployeeByFilter();
+      setToast(
+        "success",
+        `Đã xóa thành công ${checkedList.value.length} bản ghi`
+      );
+    } catch (error) {
+      const message = handleErrorResponse(error);
+      setToast("error", message);
+    }
   }
 };
 </script>
