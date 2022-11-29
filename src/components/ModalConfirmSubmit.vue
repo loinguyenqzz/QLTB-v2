@@ -7,13 +7,15 @@
       </div>
     </template>
     <template #submit>
-      <BaseButton @click="emits('submit', props.reAuthId)">Đồng ý</BaseButton>
+     <BaseButton styleButton="style2" @click="emits('isSave', false)">Không</BaseButton>
+     <BaseButton @click="emits('isSave', true)">Lưu</BaseButton>
     </template>
   </Modal>
 </template>
 <script setup>
-import Modal from "./Modal.vue";
+import Modal from "../components/Modal.vue";
 import BaseButton from "./common/BaseButton.vue";
+
 const props = defineProps({
   titleModal: {
     type: String,
@@ -22,14 +24,10 @@ const props = defineProps({
   message: {
     type: String,
     default: "",
-  },
-  reAuthId: {
-    type: String,
-    default: "",
-  },
+  }
 });
 
-const emits = defineEmits(["submit"]);
+const emits = defineEmits(["isSave"]);
 </script>
 <style scoped>
 .modal__inner {

@@ -13,6 +13,9 @@ const validate = {
     },
     phoneNumber: (value) => {
         const phoneNumberFormat = /^[0-9]*$/
+        if(value.length > 0 && value.length < 10) {
+            return "Số điện thoại phải có 10 chữ số"
+        }
         return value.match(phoneNumberFormat) ? "" : "Số điện thoại phải là những chữ số"
     }
 }

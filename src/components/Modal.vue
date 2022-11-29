@@ -11,7 +11,7 @@
         <slot name="extra"></slot>
         <slot></slot>
         <div class="modal-footer">
-          <BaseButton styleButton="style2" @click="handleCloseModal"
+          <BaseButton v-if="!props.customClose" styleButton="style2" @click="handleCloseModal"
             >Đóng</BaseButton>
           <slot name="submit"></slot>
         </div>
@@ -26,8 +26,12 @@ const props = defineProps({
     type: String,
     default: 0,
   },
+  customClose: {
+    type: Boolean,
+    default: false
+  }
 });
-const emit = defineEmits(["close"]);
+const emits = defineEmits(["close"]);
 const modalStyle = {
   "max-width": props.width + "px",
 };
@@ -36,7 +40,7 @@ const modalStyle = {
  * Xử lý đóng modal
  */
 const handleCloseModal = () => {
-  emit('close')
+  emits('close')
 };
 </script>
 <style scoped>
@@ -77,7 +81,7 @@ const handleCloseModal = () => {
 .modal-footer {
   position: absolute;
   display: flex;
-  right: 16px;
+  right: 24px;
   bottom: 24px;
 }
 </style>

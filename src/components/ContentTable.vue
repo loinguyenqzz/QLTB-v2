@@ -73,7 +73,7 @@
     <ModalReAuth
       v-show="isModalActive"
       title-modal="Thông báo"
-      message="Bạn có chắc chắn muốn xóa cán bộ giáo viên đang chọn không ?"
+      :message="resources.MESSAGE_CONFIRM_DELETE"
       width="350"
       :re-auth-id="reAuthId"
       @close="closeModal"
@@ -85,6 +85,7 @@
       title-modal="Sửa hồ sơ Cán bộ, giáo viên"
       :data="defaultData"
       @close="isModalFormActive = false"
+      @closeByBtn="isModalFormActive = false"
       @submit="handleEditEmployee"
     />
   </div>
@@ -98,6 +99,7 @@ import employeeServices from "../api/employeeServices";
 import axios from "axios";
 import resources from "../utils/resources";
 import enums from "../utils/enums";
+import handleErrorResponse from '../hooks/handleErrorResponse'
 
 const props = defineProps({
   headers: {

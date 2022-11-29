@@ -36,6 +36,7 @@ import validate from "../hooks/useValidate";
  * @focus: Xác định input này có focus vào hay không
  */
 const props = defineProps({
+  id: String,
   label: String,
   labelWidth: {
     type: Number,
@@ -50,8 +51,8 @@ const props = defineProps({
     default: null,
   },
   focus: {
-    type: Number,
-    default: -99999,
+    type: Boolean,
+    default: false,
   },
   tooltip: {
     type: String,
@@ -65,17 +66,16 @@ const isRequire = props.roles.includes("isRequire");
 const inputRef = ref(null);
 const inputValue = ref(props.modelValue);
 const errorMessage = ref("");
+const isFocus = ref()
 
-onMounted(() => {
-  if (props.focus > -1) {
-    inputRef.value.focus();
+watch(isFocus, (value) => {
+  if (value) {
+    inputRef.value.focus()
   }
-});
+})
 
 watch(toRef(props, 'focus'), (value) => {
-  if (value > 0 ) {
-    inputRef.value.focus();
-  }
+ isFocus.value = value ? value : false
 })
 
 watch(toRef(props, "modelValue"), (value) => {
@@ -89,8 +89,12 @@ watch(toRef(props, "modelValue"), (value) => {
 const handleValidate = () => {
   props.roles.forEach((role) => {
     errorMessage.value = validate[role](inputValue.value);
+  })
+  emits("validate", {
+    id: props.id,
+    isValidate: !errorMessage.value
   });
-  emits("validate", !errorMessage.value);
+  isFocus.value = false
 };
 
 /**
@@ -123,6 +127,7 @@ const handleChange = (e) => {
   margin-bottom: 12px;
   display: flex;
   justify-content: space-between;
+  align-items: center;
   width: 300px;
   position: relative;
 }
@@ -149,7 +154,7 @@ const handleChange = (e) => {
   position: absolute;
   border-radius: 4px;
   top: 0;
-  left: calc(100% + 5px);
+  left: calc(100% + 8px);
   z-index: 2;
 }
 

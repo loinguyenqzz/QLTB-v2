@@ -39,6 +39,14 @@
       <BaseButton>Nhập khẩu</BaseButton>
     </div>
   </div>
+  <ModalConfirmSubmit
+    v-show="isShowModalConfirm"
+    title-modal="Thông báo"
+    :message="resources.MESSAGE_CONFIRM_SUBMIT"
+    width="350"
+    @close="isShowModalConfirm = !isShowModalConfirm"
+    @isSave="(isSave) => isSaveData = isSave"
+  />
 </template>
 
 <script setup>
@@ -48,9 +56,11 @@ import ContentFooter from "../components/ContentFooter.vue";
 import BaseButton from "../components/common/BaseButton.vue";
 import ModalForm from "../components/ModalForm.vue";
 import Loading from "../components/Loading.vue";
-import { inject, onMounted, ref, watch } from "vue";
+import { inject, onMounted, provide, ref, watch } from "vue";
 import employeeServices from "../api/employeeServices";
 import handleErrorResponse from "../hooks/handleErrorResponse";
+import ModalConfirmSubmit from "../components/ModalConfirmSubmit.vue";
+import resources from '../utils/resources'
 
 const headers = [
   {
@@ -90,11 +100,13 @@ const headers = [
   },
 ];
 const isModalActive = ref(false);
+const isShowModalConfirm = ref(false);
 const isLoading = ref(false);
 const employees = ref([]);
 const totalRecords = ref(0);
 const totalPages = ref(0);
 const checkedList = ref([]);
+const isSaveData = ref(null)
 
 const { setToast } = inject("toast");
 
@@ -103,6 +115,18 @@ const params = ref({
   pageNumber: 1,
   keyword: "",
 });
+
+const setShowModalConfirm = (value) => {
+  isShowModalConfirm.value = value
+}
+
+provide("modalConfirmSubmit", {
+  isSaveData,
+  isShowModalConfirm,
+  setShowModalConfirm
+})
+
+watch(isShowModalConfirm, () => isSaveData.value = null)
 
 /**
  * Call api lấy dữ liệu nhân viên khi comonent được mount
@@ -186,8 +210,9 @@ const handleDeleteMutiple = async () => {
       getEmployeeByFilter();
       setToast(
         "success",
-        `Đã xóa thành công ${checkedList.value.length} bản ghi`
+        `Đã xóa thành công ${checkedList.value.length} cán bộ giáo viên`
       );
+      checkedList.value = [];
     } catch (error) {
       const message = handleErrorResponse(error);
       setToast("error", message);

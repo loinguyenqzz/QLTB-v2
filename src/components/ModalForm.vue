@@ -1,5 +1,5 @@
 <template>
-  <Modal>
+  <Modal :customClose="true">
     <template #extra>
       <div class="modal__inner--extra">
         <img src="../assets/Images/default_avatar.png" alt="" />
@@ -18,31 +18,36 @@
         <div class="modal__title">{{ props.titleModal }}</div>
         <form action="" class="modal__form">
           <FormGroupInput
+            id="code"
             label="Số hiệu cán bộ"
             v-model="employee.employeeCode"
-            :focus="focusInput"
+            :focus="isFocusEmployeeCode"
             :roles="['isRequire']"
-            @validate="(isValidate) => (submitable = isValidate)"
+            @validate="handleCheckSubmitAble"
           />
           <FormGroupInput
+            id="name"
             label="Họ và tên"
             v-model="employee.fullName"
+            :focus="isFocusFullName"
             :label-width="90"
             :roles="['isRequire']"
-            @validate="(isValidate) => (submitable = isValidate)"
+            @validate="handleCheckSubmitAble"
           />
           <FormGroupInput
+            id="phoneNumber"
             label="Số điện thoại"
             v-model="employee.phoneNumber"
             :roles="['phoneNumber']"
-            @validate="(isValidate) => (submitable = isValidate)"
+            @validate="handleCheckSubmitAble"
           />
           <FormGroupInput
+            id="email"
             label="Email"
             v-model="employee.email"
             :labelWidth="90"
             :roles="['email']"
-            @validate="(isValidate) => (submitable = isValidate)"
+            @validate="handleCheckSubmitAble"
           />
           <BaseSelect
             label="Tổ bộ môn"
@@ -88,10 +93,8 @@
       </div>
     </template>
     <template #submit>
-      <BaseButton @click="handleSubmit" @keyup.tab="focusInput++"
-        >Lưu</BaseButton
-      >
-      <Toastify ref="toastifyRef" />
+      <BaseButton styleButton="style2" @click="handleClose">Đóng</BaseButton>
+      <BaseButton @click="handleSubmit">Lưu</BaseButton>
     </template>
   </Modal>
 </template>
@@ -103,10 +106,10 @@ import ContextMenu from "./ContextMenu.vue";
 import BaseCheckbox from "./common/BaseCheckbox.vue";
 import BaseInputDate from "./common/BaseInputDate.vue";
 import BaseButton from "./common/BaseButton.vue";
-import Toastify from "./Toastify.vue";
 import { department, equipmentRoom, subject } from "../utils/entities";
 import {
   computed,
+  inject,
   onMounted,
   reactive,
   readonly,
@@ -115,6 +118,7 @@ import {
   watch,
 } from "vue";
 import employeeServices from "../api/employeeServices";
+import resources from "../utils/resources";
 
 const props = defineProps({
   titleModal: {
@@ -135,22 +139,51 @@ const props = defineProps({
       dayOff: null,
     },
   },
+  type: {
+    type: String,
+  },
 });
 
-const emits = defineEmits(["submit"]);
+const emits = defineEmits(["submit", "closeByBtn"]);
 
-const focusInput = ref(0)
-const inputEmployeeCode = ref(null);
+const isFocusEmployeeCode = ref(null);
+const isFocusFullName = ref(null);
 const employee = ref({ ...props.data });
-const submitable = ref(false);
-const toastifyRef = ref(null);
+const submitable = ref([]);
 const isWorking = ref(!employee.value.dayOff);
+const { setToast } = inject("toast");
+const isChangeEmloyeeData = ref(false);
+const { isSaveData, setShowModalConfirm } = inject("modalConfirmSubmit");
 
 onMounted(() => {
   if (!employee.value.employeeCode) {
     getMaxCode();
   }
+  isFocusEmployeeCode.value = true;
 });
+
+watch(employee.value, () => (isChangeEmloyeeData.value = true));
+
+watch(isSaveData, (value) => {
+  if(value === true) {
+    setShowModalConfirm(false)
+    handleSubmit()
+  } else if(value === false) {
+    emits("closeByBtn")
+    setShowModalConfirm(false)
+  }
+})
+/**
+ * Xử lý đóng form
+ * @author LOINQ - 20/11/2022
+ */
+const handleClose = () => {
+  if(isChangeEmloyeeData.value) {
+    setShowModalConfirm(true);
+  } else {
+    emits("closeByBtn")
+  }
+};
 
 /**
  * Lấy mã số cán bộ lớn nhất
@@ -195,19 +228,18 @@ const equipmentRoomOptions = equipmentRoom.map((item) => ({
 
 /**
  * Xử lý sự kiện khi người dùng ấn submit
+ * Created by LOINQ (20/11/2022)
  */
 const handleSubmit = () => {
-  if (!isWorking.value && !employee.value.dayOff) {
-    toastifyRef.value.error("Bạn phải chọn ngày nghỉ việc");
-  } else if (!employee.value.fullName) {
-    toastifyRef.value.error("Bạn phải nhập tên Cán bộ");
-  } else if (!employee.value.employeeCode) {
-    toastifyRef.value.error("Bạn phải nhập số hiệu cán bộ");
+  if (!employee.value.fullName) {
+    isFocusFullName.value = true;
+    setToast("error", "Họ và tên không được để trống");
   } else {
-    if (submitable.value) {
+    if (submitable.value.length == 0) {
       emits("submit", employee.value);
     } else {
-      toastifyRef.value.error("Bạn phải nhập các trường đúng định dạng");
+      setToast("error", resources.MESSAGE_INVALID_DATA);
+      console.log(submitable.value);
     }
   }
 };
@@ -254,7 +286,19 @@ const handleChangeIsWorking = (state) => {
   employee.value.dayOff = null;
 };
 
-const handleValidate = (isValidate) => {};
+/**
+ * Kiểm tra xem form có thể submit hay không
+ * @param {object} validate: Gồm id và trạng thái validate của input
+ */
+const handleCheckSubmitAble = (validate) => {
+  if (!validate.isValidate && !submitable.value.includes(validate.id)) {
+    submitable.value.push(validate.id);
+  } else if (validate.isValidate) {
+    submitable.value = submitable.value.filter(
+      (element) => element != validate.id
+    );
+  }
+};
 </script>
 
 <style scoped>
@@ -262,15 +306,15 @@ const handleValidate = (isValidate) => {};
   position: relative;
   display: flex;
   flex-direction: column;
-  width: 200px;
+  width: 190px;
   height: 100%;
-  padding: 16px 28px;
+  padding: 16px 24px;
 }
 
 .modal__inner--main {
   position: relative;
   flex-grow: 1;
-  padding: 12px 16px 80px 16px;
+  padding: 12px 24px 80px 24px;
 }
 
 .modal__inner--main::before {

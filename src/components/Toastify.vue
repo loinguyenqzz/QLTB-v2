@@ -75,6 +75,7 @@ defineExpose({
   display: flex;
   min-height: 80px;
   min-width: 300px;
+  max-width: 380px;
   background-color: white;
   position: fixed;
   z-index: 4;

@@ -39,7 +39,7 @@ const resources = {
    * Thông báo khi trùng mã cán bộ giáo viên
    * @author LOINQ (10/11/2022)
    */
-  MESSAGE_DUPLICATE_EMPLOYEE_CODE: "Mã số cán bộ, giáo viên đã tồn tại",
+  MESSAGE_DUPLICATE_EMPLOYEE_CODE: "Số hiệu cán bộ đã tồn tại trong hệ thống vui lòng kiểm tra lại.",
     /**
    * Thông báo khi status code = 0
    * @author LOINQ (10/11/2022)
@@ -65,6 +65,21 @@ const resources = {
    * @author LOINQ (10/11/2022)
    */
   MESSAGE_ERROR_DEFAULT: "Có lỗi xẳy ra vui lòng liên hệ MISA",
+      /**
+   * Thông báo lỗi khi dữ liệu không hợp lệ
+   * @author LOINQ (10/11/2022)
+   */
+  MESSAGE_INVALID_DATA: "Bạn phải nhập các trường đúng định dạng",
+        /**
+   * Thông báo xác nhận lại khi xóa dữ liệu
+   * @author LOINQ (10/11/2022)
+   */
+  MESSAGE_CONFIRM_DELETE: "Bạn có chắc chắn muốn xóa cán bộ giáo viên đang chọn không ?",
+        /**
+   * Thông báo xác nhận lại khi gửi dữ liệu
+   * @author LOINQ (10/11/2022)
+   */
+  MESSAGE_CONFIRM_SUBMIT: "Dữ liệu đã thay đổi bạn có muốn lưu lại không?",
 };
 
 export default Object.freeze(resources);

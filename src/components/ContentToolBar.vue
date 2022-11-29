@@ -29,7 +29,8 @@
         width="850"
         :title-modal="resources.MODAL_TITLE_INSERT"
         :data="employee"
-        @close="closeModal"
+        @close="isShowModalForm = !isShowModalForm"
+        @closeByBtn="isShowModalForm = !isShowModalForm"
         @submit="handleSubmit"
       />
       <ModalReAuth
@@ -54,6 +55,7 @@ import ModalReAuth from "./ModalReAuth.vue";
 import useDebounce from "../hooks/useDebounce.js";
 import resources from '../utils/resources.js'
 import enums from '../utils/enums'
+import handleErrorResponse from '../hooks/handleErrorResponse'
 
 const emits = defineEmits(["changeData", "DeleteGridItem", "search"]);
 
@@ -74,14 +76,6 @@ const employee = ref({
   isTrained: false,
   dayOff: null,
 });
-
-/**
- * Xử lý đóng modal
- * Created By LOINQ (10/11/2022)
- */
-const closeModal = () => {
-  isShowModalForm.value = !isShowModalForm.value;
-};
 
 watch(inputDebounce, () => {
   emits("search", inputDebounce.value);
